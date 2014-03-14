@@ -2,7 +2,14 @@ ABOUT:
 
 This code is developed and maintained by Nathaniel Knopf, Samuel Sakhai, and Shawn Shirazi
 
-It requires Python 2.7
+It must be run with Python 2.7
+
+Required Libraries:
+	PySerial [https://pypi.python.org/pypi/pyserial]
+	decimal [Builtin]
+	time [Builtin]
+	os [Builtin]
+	sys [Builtin]
 
 These three scripts are used to collect data about mouse activity over month long periods of time.
 
@@ -10,6 +17,7 @@ GENERAL METHODOLOGY:
 
 PART I:
 	TubeCode.py and WheelCode.py are used in conjunction with each other to gather raw data.
+
 PART II:
 	Parsing.py is used to prepare files for use with CLOCKLAB, which generates actograms.
 
