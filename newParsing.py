@@ -23,14 +23,22 @@ from os import system
 import sys
 
 # A counter which never gets reset - Counts total revolutions of the wheel.
-# By convention, this is the actual number of turns. When this number is written
-# to the file for CLOCKLAB, however, it is scaled down by whatever the scale
-# factor is, but only in the process of writing. The actual value of the counter
-# never changes.
+# This information is currently never recorded in any file meant for CLOCKLAB,
+# and is only tracked for reference purposes.
 # PLEASE ANNOTATE WHICH FUNCTIONALITY THIS COUNTER SERVES:
 # [X] - TOTAL TIMES WHEEL PHYSICALLY TURNS (A.K.A. ODOMETER MODE)
 # [ ] - TOTAL OF ALL REVOLUTIONS FOR ANIMALS (SUM OF ALL TOTAL ANIMAL REVOLUTIONS)
 totalRevolutions = 0.0
+
+# A counter which tracks the total revolutions in the current block.
+# By convention, this is the actual number of turns. When this number is written
+# to the file for CLOCKLAB, however, it is scaled down by whatever the scale
+# factor is, but only in the process of writing. The actual value of the counter
+# never changes, except for when being modified.
+# PLEASE ANNOTATE WHICH FUNCTIONALITY THIS COUNTER SERVES:
+# [X] - TOTAL TIMES WHEEL PHYSICALLY TURNS (A.K.A. ODOMETER MODE)
+# [ ] - TOTAL OF ALL REVOLUTIONS FOR ANIMALS (SUM OF ALL TOTAL ANIMAL REVOLUTIONS)
+totalRevolutionsBlock = 0.0
 
 months = {'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 
                         'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'}
@@ -234,7 +242,7 @@ def writeData():
 	for mouse in mice:
 		mouse.writeLine(dateAsc, timeAsc)
 		mouse.endOfBlock()
-	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutions/scale) + '\n')
+	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutionsBlock/scale) + '\n')
 
 # The main function which reads a line and decides what to do with it
 # Gets called in the main loop of the program in main()
