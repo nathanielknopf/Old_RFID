@@ -3,18 +3,18 @@
 #
 # IN THIS VERSION:
 # * Spared user from having to open code by implementing new functions for collecting necessary
-#   data from user modified text file.
+#   prerequisite data from user modified text file.
 # * Eliminated errors with inconsistencies in parsed data.
 # * Heavily commented to maxamize comprehensibility and to minimize ambiguity in interpreting
 #   methodology/functionality.
 #
 # For a highly-detailed description of the methodology implemented by this script, check README.txt
 # 
-# If this code works, it was written by Nathaniel Knopf
+# If this code works, it was written by Nathaniel Knopf.
 # If it doesn't, I have no idea who wrote it.
 #
 # TODO:
-# MAKE TODO LIST
+# * MAKE TODO LIST
 
 # Required Libraries:
 import decimal as dc
@@ -22,10 +22,14 @@ import time
 from os import system
 import sys
 
-# A counter which never gets reset - Counts total revolutions of the wheel:
+# A counter which never gets reset - Counts total revolutions of the wheel.
+# By convention, this is the actual number of turns. When this number is written
+# to the file for CLOCKLAB, however, it is scaled down by whatever the scale
+# factor is, but only in the process of writing. The actual value of the counter
+# never changes.
 # PLEASE ANNOTATE WHICH FUNCTIONALITY THIS COUNTER SERVES:
-# [X] - TOTAL TIMES WHEEL PHYSICALLY TURNS (INDEPENDENT OF ANIMAL COUNTS)
-# [ ] - TOTAL OF ALL REVOLUTIONS FOR ANIMALS (DEPENDENS ON ANIMAL COUNTS)
+# [X] - TOTAL TIMES WHEEL PHYSICALLY TURNS (A.K.A. ODOMETER MODE)
+# [ ] - TOTAL OF ALL REVOLUTIONS FOR ANIMALS (SUM OF ALL TOTAL ANIMAL REVOLUTIONS)
 totalRevolutions = 0.0
 
 months = {'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 
@@ -42,6 +46,8 @@ def wait(text, seconds):
 		seconds -= 1
 
 # These two functions find the date and the time in the preferred format for CLOCKLAB
+# The input is the time since the Epoch in seconds. This is how time is recorded in the
+# raw data.
 def findAscDate(timeEpoch):
         ascRaw = time.ctime(timeEpoch)
         ascDate = ascRaw[-2:] + '/' +  months[ascRaw[4:7]] + '/' + ascRaw[8:10]
@@ -74,8 +80,8 @@ class Mouse:
 	# Makes a file for the mouse and writes headers to it for CLOCKLAB
 	def makeFile(self, self.tag):
 		filename = self.tag + '.txt'
-		mouseFile = open(filename, 'w')
-		mouseFile.write('GROUP ' + self.tag + '                                                                                 :\n\n---------\nUNIT TIME=\n')             
+		self.mouseFile = open(filename, 'w')
+		self.mouseFile.write('GROUP ' + self.tag + '                                                                                 :\n\n---------\nUNIT TIME=\n')             
 	
 	# Switches values of Boolean Vars (for gates)
 	def switchValue(self, gate):
@@ -88,6 +94,15 @@ class Mouse:
 	def countTurn(self):
 		self.ranThisBlock += 1
 		self.ranTotal += 1
+
+	# Function which writes a data point to the file for CLOCKLAB
+	def writeLine(self, dateAsc, timeAsc):
+		self.ranThisBlock /= scale
+		self.file.write(dateAsc + ' ' + timeAsc + '     ' + self.ranThisBlock + '\n')
+
+	# Function called at the end of the block - Clears data for that block period
+	def endOfBlock(self):
+		self.ranThisBlock = 0.0
 
 # Given the file in which configs are stored, pulls all needed data from config file.
 def getConfigs(fileName):
@@ -134,6 +149,10 @@ def setup():
 	mouseFour = Mouse(configs[3])
 	print "Tag: " + mouseFour.tag + "\n"
 
+	# A list of the mouse objects - Used later in the code to iterate through mouse objects
+	global mice
+	mice = [mouseOne, mouseTwo, mouseThree, mouseFour]
+
 	# Open raw data from CSV file specified in configs.
 	global csvfile
 	csvFilename = configs[4]
@@ -149,16 +168,33 @@ def setup():
 	except:
 		print "ERROR - FATAL ERROR: CSVFILE" # Error in finding raw data
 
+	# Variable which tracks the start of the current block
+	# When csvfile is loaded, startime is stored in the first line of the file
+	global startTime
+	startTime = float(csvfile.readline()[12:25])
+	print "Start Time: " + str(startTime) + "\n"
+
 	# Interval - Length of block in seconds.
 	global interval
 	interval = float(configs[5])
 	print "Interval: " + str(interval) + "\n"
+
+	# endOfBlock - Time at which the block ends and data is recorded
+	global endOfBlock
+	endOfBlock = startTime + interval
+	print "End of Block: " + str(endOfBlock) + "\n"
 
 	# Scale factor - necessary for CLOCKLAB as all values >=1000 are ignored.
 	# Results are scaled by a factor of 1/scale before being written to the CLOCKLAB files.
 	global scale
 	scale = float(configs[6])
 	print "Scale: " + str(scale) + "\n"
+
+	# Open the cage.txt file where info about the cage is stored
+	global cageFile
+	cageFile = open('cage.txt', 'w')
+	cageFile.write('GROUP CAGE ' + '                                                                                 :\n\n---------\nUNIT TIME=\n')             )
+	print "Cage File has been created and opened.\n"
 
 	print "Beginning Parsing...\n"
 
@@ -190,9 +226,47 @@ def checkCases(mice):
 			mouse.inWheel = False
 			mouse.gateTwo = False
 
+# This function writes data to all the files for CLOCKLAB when called
+# Called at the end of each block in which data was recorded
+def writeData():
+	dateAsc = findAscDate(endOfBlock)
+	timeAsc = findAscTime(endOfBlock)
+	for mouse in mice:
+		mouse.writeLine(dateAsc, timeAsc)
+		mouse.endOfBlock()
+	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutions/scale) + '\n')
+
+# The main function which reads a line and decides what to do with it
+# Gets called in the main loop of the program in main()
+def parseLine():
+	data = csvfile.readline()
+	# If the file is finished, the next line will be blank.
+	if data == '':
+		return 'done' # We're done here.
+	else:
+		if data[1:6] == "wheel":		
+			timeEpoch = float(data[13:26])
+			# If this data is still within the current block:
+			if timeEpoch < endOfBlock:
+				# do stuff
+			else:
+				# figure out blank lines
+		else:
+			timeEpoch = float(data[24:37])
+
 def main():
-	
 	system('clear')	
 	setup()
+
+	done = False
+	while not done:
+		status = parseLine()
+		if status == 'done':
+			done = True
+
+	# Close/save all the files for CLOCKLAB
+	for mouse in mice:
+		mouse.file.close()
+	cageFile.close()
 
 main()
