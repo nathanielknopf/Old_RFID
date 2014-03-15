@@ -14,11 +14,17 @@
 # If it doesn't, I have no idea who wrote it.
 #
 # TODO:
-# * MAIN FUNCTION FOR PARSING DATA
-# * CREATE SYSTEM FOR RECORDING BLANK LINES
+# * BUG: 3 MICE ARE ATTRIBUTED NO RUNS, 1 IS ATTRIBUTED SEVERAL, CAGE.TXT REPORTS HUGE NUMBER OF TURNS
+# * BUG: I WROTE THIS CODE
+#
+# RESOLVED BUGS:
+# * RESOLVED: REPEATED EMPTY DATA POINTS AND TIMES [03/15/2014 @ 11:24 AM]
+# 	* SOLUTION: Treated "endOfBlock" variable as local in all uses, and it is now passed back
+#		    and forth between setup() (where it is created), main(), parseLine(), and
+#		    writeData(). This resolves any conflicts in value due to treating it as a global
+#		    or as a local variable.
 
 # Required Libraries:
-import decimal as dc
 import time
 from os import system
 import sys
@@ -109,7 +115,7 @@ class Mouse:
 
 	# Function which writes a data point to the file for CLOCKLAB
 	def writeLine(self, dateAsc, timeAsc):
-		self.ranThisBlock /= scale
+		#self.ranThisBlock /= scale
 		self.file.write(dateAsc + ' ' + timeAsc + '     ' + str(self.ranThisBlock) + '\n')
 
 	# Function called at the end of the block - Clears data for that block period
@@ -192,7 +198,7 @@ def setup():
 	print "Interval: " + str(interval) + "\n"
 
 	# endOfBlock - Time at which the block ends and data is recorded
-	global endOfBlock
+	# This gets returned to main()
 	endOfBlock = startTime + interval
 	print "End of Block: " + str(endOfBlock) + "\n"
 
@@ -211,6 +217,8 @@ def setup():
 	wait("Beginning Parsing... ", 5)
 
 	system('clear')
+
+	return endOfBlock
 
 # This function checks for cases (typical and atypical) detailed in the README
 # Function takes a list of mouse objects as input - Accommodates any length list 
@@ -240,14 +248,14 @@ def checkCases(mice):
 # This function writes data to all the files for CLOCKLAB when called
 # Called at the end of each block in which data was recorded
 # Takes a list of mouse objects as input
-def writeData(mice):
+def writeData(mice, endOfBlock):
 	global totalRevolutionsBlock
 	dateAsc = findAscDate(endOfBlock)
 	timeAsc = findAscTime(endOfBlock)
 	for mouse in mice:
 		mouse.writeLine(dateAsc, timeAsc)
 		mouse.endOfBlock()
-	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutionsBlock/scale) + '\n')
+	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutionsBlock) + '\n') #/scale
 	totalRevolutionsBlock = 0.0
 
 # This function counts a turn for all mice that are in the wheel. It also
@@ -284,7 +292,7 @@ def parseLine(endOfBlock, interval):
 				countTurn(mice)
 			else:
 				# First, write the last line and increase endOfBlock by interval.
-				writeData(mice)
+				writeData(mice, endOfBlock)
 				endOfBlock += interval
 				# Then, check to see if more than one block has passed.
 				# While there are still empty blocks, write lines.
@@ -293,7 +301,7 @@ def parseLine(endOfBlock, interval):
 					# Write a blank line for endOfBlock
 					# This is accomplished by writing a line like normal, since
 					# all of the counters for the current empty block are at zero.
-					writeData(mice)
+					writeData(mice, endOfBlock)
 					# Then, increase endOfBlock by interval.
 					endOfBlock += interval
 				# Once the new block has been made, record the data point.
@@ -309,7 +317,7 @@ def parseLine(endOfBlock, interval):
 				
 				else:
 					# First, write the last line and increase endOfBlock
-					writeData(mice)
+					writeData(mice, endOfBlock)
 					endOfBlock += interval
 					# Then, check to see if more than one block has passed.
 					# While there are still empty blocks, write lines.
@@ -319,7 +327,7 @@ def parseLine(endOfBlock, interval):
 						# This is accomplished by writing a line like normal,
 						# since all of the counters for the current empty
 						# block are at zero.
-						writeData(mice)
+						writeData(mice, endOfBlock)
 						# Then, increase endOfBlock by interval.
 						endOfBlock += interval
 					# Once the new current block has been made, record the data
@@ -332,10 +340,8 @@ def parseLine(endOfBlock, interval):
 
 def main():
 
-	global endOfBlock
-
 	system('clear')	
-	setup()
+	endOfBlock = setup()
 
 	done = False
 	while not done:
