@@ -1,39 +1,58 @@
-ABOUT:
+README FOR PROJECT MUS
+
+TABLE OF CONTENTS:
+	1. ABOUT
+		1a. REQUIRED LIBRARIES
+	2. OUTLINE OF BASIC METHODOLOGY
+	3. DESCRIPTION OF METHODOLOGY
+		3a. PART I (COLLECTION OF RAW DATA)
+			3ai. TUBECODE
+			3aii. WHEELCODE
+		3b. PART II (PARSING RAW DATA FOR CLOCKLAB)
+			3bi. MESS
+	4. CONVENTIONS	
+	5. OTHER NOTES
+
+1. ABOUT:
 
 This code is developed and maintained by Nathaniel Knopf, Samuel Sakhai, and Shawn Shirazi
 
 It must be run with Python 2.7
 
-Required Libraries:
-	PySerial [https://pypi.python.org/pypi/pyserial]
-	decimal [Builtin]
-	time [Builtin]
-	os [Builtin]
-	sys [Builtin]
+	1a. REQUIRED LIBRARIES:
+		PySerial [https://pypi.python.org/pypi/pyserial]
+		time [Builtin]
+		os [Builtin]
+		sys [Builtin]
 
-These three scripts are used to collect data about mouse activity over month long periods of time.
+2. OUTLINE OF BASIC METHODOLOGY:
 
-GENERAL METHODOLOGY:
+In Part I, raw data is collected with TubeCode.py and WheelCode.py in conjunction with the Arduino setup. 
 
-PART I:
-	TubeCode.py and WheelCode.py are used in conjunction with each other to gather raw data.
+In Part II, raw data is parsed into a format that can be input into CLOCKLAB for generation of actograms.
+
+
+3. DESCRIPTION OF METHODOLOGY:
+
+	3a. PART I:
+
+		3ai. TUBECODE:
+
+		Information about when mice pass through the RFID "gates" is collected by TubeCode.py
+
+		Each cage requires a separate instance of TubeCode.py. Each instance of the script should specify the USB Com Port used by the Arduino specific to that cage, as well as a destination CSV 			file for the raw data collected. This information is used by PySerial to monitor incoming data, which is then recorded to the CSV file specific to that cage.
+
+	3aii. WHEELCODE:
+
+	
+
+		One instance of WheelCode.py should be run to cover all cages. In WheelCode.py, the user must specify which USB Com Port is used by the Arduino monitoring Wheel activity. WheelCode.py will 			then manage wheel revolutions from all cages in use, and will write data to relevant CSV files for each cage. The relevant CSV files should be specified by the user in the WheelCode.py 			file.
 
 PART II:
-	Parsing.py is used to prepare files for use with CLOCKLAB, which generates actograms.
 
-DESCRIPTION OF METHODOLOGY:
+Parsing Code Algorithm:
 
-PART I:
-
-TubeCode.py:
-
-Each cage requires a separate instance of TubeCode.py to be run. Each version of the script should specify the USB Com Port used by the Arduino specific to that cage, as well as a destination CSV file for the raw data collected. This information is used by PySerial to monitor incoming data, which is then recorded to the CSV file specific to that cage.
-
-WheelCode.py:
-
-One instance of WheelCode.py should be run to cover all cages. In WheelCode.py, the user must specify which USB Com Port is used by the Arduino monitoring Wheel activity. WheelCode.py will then manage wheel revolutions from all cages in use, and will write data to relevant CSV files for each cage. The relevant CSV files should be specified by the user in the WheelCode.py file.
-
-PART II:
+Each mouse is treated as an object. 
 
 We have a variable which tracks the end of the current block (endOfBlock).
 

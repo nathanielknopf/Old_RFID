@@ -7,6 +7,7 @@
 # * Eliminated errors with inconsistencies in parsed data.
 # * Heavily commented to maxamize comprehensibility and to minimize ambiguity in interpreting
 #   methodology/functionality.
+# * No longer prints the count of data points - significantly quickens run time
 #
 # For a highly-detailed description of the methodology implemented by this script, check README.txt
 # 
@@ -14,8 +15,7 @@
 # If it doesn't, I have no idea who wrote it.
 #
 # TODO:
-# * BUG: 3 MICE ARE ATTRIBUTED NO RUNS, 1 IS ATTRIBUTED SEVERAL, CAGE.TXT REPORTS HUGE NUMBER OF TURNS
-# * BUG: I WROTE THIS CODE
+# * 
 #
 # RESOLVED BUGS:
 # * RESOLVED: REPEATED EMPTY DATA POINTS AND TIMES [03/15/2014 @ 11:24 AM]
@@ -263,8 +263,13 @@ def writeData(mice, endOfBlock):
 def countTurn(mice):
 	global totalRevolutions
 	global totalRevolutionsBlock
-	totalRevolutions += 1
-	totalRevolutionsBlock += 1
+	toAdd = False
+	for mouse in mice:
+		if mouse.inWheel:
+			toAdd = True
+	if toAdd:
+		totalRevolutions += 1
+		totalRevolutionsBlock += 1
 	for mouse in mice:
 		mouse.countTurn()
 
