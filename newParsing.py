@@ -14,7 +14,8 @@
 # If it doesn't, I have no idea who wrote it.
 #
 # TODO:
-# * MAKE TODO LIST
+# * MAIN FUNCTION FOR PARSING DATA
+# * CREATE SYSTEM FOR RECORDING BLANK LINES
 
 # Required Libraries:
 import decimal as dc
@@ -243,6 +244,7 @@ def writeData():
 		mouse.writeLine(dateAsc, timeAsc)
 		mouse.endOfBlock()
 	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutionsBlock/scale) + '\n')
+	totalRevolutionsBlock = 0.0
 
 # The main function which reads a line and decides what to do with it
 # Gets called in the main loop of the program in main()
