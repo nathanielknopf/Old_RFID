@@ -1,4 +1,4 @@
-README FOR PROJECT MUS
+DOCUMENTATION FOR PROJECT MUS
 Nathaniel Knopf, Samuel Sakhai, Shawn Shirazi
 
 -----------------------------------------------------------------------------------
@@ -17,8 +17,11 @@ TABLE OF CONTENTS:
 			2biii. TOTAL REVOLUTIONS PER BLOCK
 		2c. SCALING
 			2ci. SCALING VARIABLE
-		2d. END OF BLOCK VARIABLE
-		2e. CONFIG
+		2d. INTERVAL AND END OF BLOCK
+			2di. INTERVAL VARIABLE
+			2dii. END OF BLOCK VARIABLE
+		2e. OTHER TERMINOLOGY
+		2f. CONFIG
 	3. BASIC DESCRIPTION OF METHODOLOGY
 	4. DETAILED DESCRIPTION OF METHODOLOGY
 		4a. PART I (COLLECTION OF RAW DATA)
@@ -30,8 +33,11 @@ TABLE OF CONTENTS:
 			4bii. GENERAL ALGORITHM OF PART II
 				4bii1. READING RAW DATA
 				4bii2. RECORDING PARSED DATA
-				4bii3. CHECKING FOR SPECIAL CASES	
-	5. OTHER NOTES
+			4biii. SPECIAL CASES
+				4biii1. MULTIPLE BLOCKS OF INACTIVITY
+				4biii2. SPECIAL CASES OF MOUSE FLAGS
+	5. BEFORE RUNNING
+	6. OTHER NOTES
 
 -----------------------------------------------------------------------------------
 
@@ -41,7 +47,7 @@ Project Mus is an open source project for automatically tracking animal activity
 
 This project is maintained by Nathaniel Knopf, Samuel Sakhai, and Shawn Shirazi.
 
-All of this code can be run with Python 2.7 only.
+Python 2.7 is required to run all of the code from Project Mus.
 
 ----------------------------------------
 
@@ -117,37 +123,83 @@ There are two modes for each Total Revolutions variable. These two modes are:
 
 This is the variable which counts the total revolutions in the cage for the duration of the experiment.
 
-By default, the Total Revolutions Variable 
+By default, the Total Revolutions Variable functions in Odometer mode.
 
 --------------------
 
 2biii. TOTAL REVOLUTIONS PER BLOCK VARIABLE
 
+This is the variable which counts the total revolutions in the cage for each block of time. The value stored in this variable is what gets written to the CLOCKLAB file for the entire cage.
+
+By default, the Total Revolutions per Block variable functions in Odometer mode.
+
 ----------------------------------------
 
 2c. SCALING
+
+In order to accommodate for CLOCKLAB's ignoring of values >999, Project Mus includes a Scaling function. This function scales all wheel rotation values down to a value which CLOCKLAB will not ignore.
+
+When writing to a file, Parsing.py will divide each value by the Scaling variable. For example, if the Total Revolutions Per Block variable reports 1543 rotations in the block being written to the CLOCKLAB files, and the Scaling variable stores the value "10.0", Parsing.py will write 154.3 rotations to the CLOCKLAB file for the entire cage.
 
 --------------------
 
 2ci. SCALING VARIABLE
 
+When writing to a file, Parsing.py will divide each value by the Scaling variable. For example, if the Total Revolutions Per Block variable reports 1543 rotations in the block being written to the CLOCKLAB files, and the Scaling variable stores the value "10.0", Parsing.py will write 154.3 rotations to the CLOCKLAB file for the entire cage.
+
+The value of the Scaling variable can be changed in the CONFIG file.
+
 ----------------------------------------
 
-2d. END OF BLOCK
+2d. INTERVAL AND END OF BLOCK
+
+Parsing.py records parsed data in blocks of time specified by the user. Each block of time's duration is expressed in seconds by the Interval variable.
 
 --------------------
 
-2d1. END OF BLOCK VARIABLE
+2di. INTERVAL VARIABLE
+
+This is the variable which expresses the duration of each block of time. It can be changed in the CONFIG file.
+
+--------------------
+
+2dii. END OF BLOCK VARIABLE
+
+This is a variable used by the Parsing.py script to determine whether each raw data point that it reads falls within the current block of time. When Parsing.py reads a raw data point from the CSV file which occurred at a time before the time stored in the End of Block variable, it extracts the relevant information from the raw data and updates whatever the raw data dictates. If the raw data point occurred at a time after the time stored in the End of Block variable, Parsing.py will interpret this as meaning that the block it was working in has come to its conclusion. It will then record the parsed data to the files for CLOCKLAB. If several blocks of time have passed with no activity, Parsing.py will account for this in the CLOCKLAB files as well. To see a detailed description of how Parsing.py does this, check section 4biii1. MULTIPLE BLOCKS OF INACTIVITY.
 
 ----------------------------------------
 
-2e. CONFIG
+2e. OTHER TERMINOLOGY
+
+Various other terminology used in Project Mus:
+
+* BLOCK - The duration of time for each data point for the CLOCKLAB files. Determined by the Interval variable in the CONFIG file.
+
+* RAW DATA - The data produced by the scripts in PART I (TubeCode.py and WheelCode.py). This raw data is then parsed by Parsing.py in preparation for use with CLOCKLAB.
+
+* PARSED DATA - The files which are created by Parsing.py for use with CLOCKLAB.
+
+----------------------------------------
+
+2f. CONFIG
+
+The CONFIG file contains prerequisite settings and data which Parsing.py needs to parse the data for CLOCKLAB. This includes:
+
+* The RFID tags for each animal in the cage
+
+* The name of the CSV file containing raw data (must include .csv extension)
+
+* The desired interval (length of each block) for the data to be recorded in.
+
+* The desired scaling variable for the data to be recorded with.
 
 -----------------------------------------------------------------------------------
 
 3. BASIC DESCRIPTION OF METHODOLOGY
 
-In Part I, raw data is collected with TubeCode.py and WheelCode.py in conjunction with the Arduino setup. In Part II, raw data is parsed into a format that can be input into CLOCKLAB for generation of actograms.
+In Part I, raw data is collected with TubeCode.py and WheelCode.py in conjunction with the Arduino setup. This raw data includes the triggering of gates by specific mice (differentiated by their RFID tags), rotations of the wheels in each cage, and the times at which such events occurred.
+
+In Part II, raw data is parsed into a format that can be input into CLOCKLAB for generation of actograms.
 
 -----------------------------------------------------------------------------------
 
@@ -156,6 +208,8 @@ In Part I, raw data is collected with TubeCode.py and WheelCode.py in conjunctio
 ----------------------------------------
 
 4a. PART I (COLLECTION OF RAW DATA)
+
+Raw data is collected by two scripts - TubeCode.py, and WheelCode.py. These two scripts create a CSV file for each cage which contains raw data which is then parsed by Parsing.py for use with CLOCKLAB. Each CSV file begins with a line that includes the time at which data collection began for that cage. This line is then used by Parsing.py as the beginning of the first block.
 
 --------------------
 
@@ -187,7 +241,7 @@ Each mouse in the cage is treated as an object, referred to from this point forw
 
 * A variable which stores the RFID Tag as a string (tag)
 
-* Three flags (one for the first gate (gateOne), one for the second gate (gateTwo), and one for whether or not the mouse is in the wheel (inWheel))
+* Three flags (one for the first gate (gateOne), one for the second gate (gateTwo), and one for whether or not the mouse is in the wheel (inWheel)) These flag variables are booleans, and their status is switched whenever the RFID gate they correspond to is triggered.
 
 * A counter of wheel revolutions attributed to that mouse (one counter for each block of time (ranThisBlock) and one for the total duration of time covered by the raw data (ranTotal))
 
@@ -205,10 +259,22 @@ Each mouse in the cage is treated as an object, referred to from this point forw
 
 4bii2. RECORDING PARSED DATA
 
+--------------------
+
+4biii. SPECIAL CASES
+
 ----------
 
-4bii3. CHECKING FOR SPECIAL CASES
+4biii1. MULTIPLE BLOCKS OF INACTIVITY
+
+----------
+
+4biii2. SPECIAL CASES OF MOUSE FLAGS
 
 --------------------------------------------------------------------------------
 
-5. OTHER NOTES
+5. BEFORE RUNNING
+
+--------------------------------------------------------------------------------
+
+6. OTHER NOTES
