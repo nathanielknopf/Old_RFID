@@ -233,19 +233,29 @@ Only one instance of WheelCode.py needs to be run for all cages. In WheelCode.py
 
 4bi. BACKGROUND
 
+This section contains background information that is useful for understanding the methodology implemented by PART II of Project Mus.
+
+Includes:
+
+* Mouse Objects
+
+*
+
 ----------
 
 4bi1. MOUSE OBJECTS
 
 Each mouse in the cage is treated as an object, referred to from this point forward as a "mouse object". Each "mouse object" has several variables associated with it:
 
-* A variable which stores the RFID Tag as a string (tag)
+* A variable which stores the RFID Tag for the specific mouse as a string (tag).
 
 * Three flags (one for the first gate (gateOne), one for the second gate (gateTwo), and one for whether or not the mouse is in the wheel (inWheel)) These flag variables are booleans, and their status is switched whenever the RFID gate they correspond to is triggered.
 
-* A counter of wheel revolutions attributed to that mouse (one counter for each block of time (ranThisBlock) and one for the total duration of time covered by the raw data (ranTotal))
+* A counter of wheel revolutions attributed to that mouse (one counter for each block of time (ranThisBlock) and one for the total duration of time covered by the raw data (ranTotal)).
 
-* The file to which all output data for use with CLOCKLAB is written (file)
+* The file to which all output data for use with CLOCKLAB is written (file). This file is opened when Parsing.py begins, and is saved and closed when Parsing.py finishes.
+
+Parsing.py maintains a list of these mouse objects called "mice", which it uses to iterate through all mouse objects to apply functions.
 
 --------------------
 
