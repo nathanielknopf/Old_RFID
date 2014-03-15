@@ -35,4 +35,12 @@ One instance of WheelCode.py should be run to cover all cages. In WheelCode.py, 
 
 PART II:
 
-<do this bit later>
+We have a variable which tracks the end of the current block (endOfBlock).
+
+We also have a variable which stores the length of time of each block (interval).
+
+When a data point is read from the raw data CSV file, its time is compared to endOfBlock. If it is less than endOfBlock, the data is recorded and the next data point is read. If it is greater than endOfBlock, a line is written to the CLOCKLAB files for the time endOfBlock. The endOfBlock variable is then increased by the value of interval, setting the next endOfBlock. The time from the data point is then checked against the next endOfBlock, to see if there were any lapsed block-periods with no activity. If this is the case, the script continues to write lines and increase the endOfBlock variable to the next endOfBlock until the time from the raw data point is less than the value of endOfBlock (in other words, the data point fits inside the range of the current block).
+
+SPECIAL CASES:
+
+

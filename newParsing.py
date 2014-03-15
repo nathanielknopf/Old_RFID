@@ -87,10 +87,11 @@ class Mouse:
 		self.file = self.makeFile()
 
 	# Makes a file for the mouse and writes headers to it for CLOCKLAB
-	def makeFile(self, self.tag):
+	def makeFile(self):
 		filename = self.tag + '.txt'
-		self.mouseFile = open(filename, 'w')
-		self.mouseFile.write('GROUP ' + self.tag + '                                                                                 :\n\n---------\nUNIT TIME=\n')             
+		mouseFile = open(filename, 'w')
+		mouseFile.write('GROUP ' + self.tag + '                                                                                 :\n\n---------\nUNIT TIME=\n')
+		return mouseFile              
 	
 	# Switches values of Boolean Vars (for gates)
 	def switchValue(self, gate):
@@ -99,15 +100,17 @@ class Mouse:
 		elif gate == '2':
 			self.gateTwo = not self.gateTwo
 
-	# Counts a turn for the specific mouse in both the current block and in total
+	# Counts a turn for the specific mouse if it's in the wheel.
+	# Adds to both the current block and the total counters.
 	def countTurn(self):
-		self.ranThisBlock += 1
-		self.ranTotal += 1
+		if self.inWheel:
+			self.ranThisBlock += 1
+			self.ranTotal += 1
 
 	# Function which writes a data point to the file for CLOCKLAB
 	def writeLine(self, dateAsc, timeAsc):
 		self.ranThisBlock /= scale
-		self.file.write(dateAsc + ' ' + timeAsc + '     ' + self.ranThisBlock + '\n')
+		self.file.write(dateAsc + ' ' + timeAsc + '     ' + str(self.ranThisBlock) + '\n')
 
 	# Function called at the end of the block - Clears data for that block period
 	def endOfBlock(self):
@@ -167,7 +170,7 @@ def setup():
 	csvFilename = configs[4]
 	if csvFilename[-4:] != '.csv':
 		csvFilename += '.csv'
-	print "CSV File: " + csvfile + "\n"
+	print "CSV File: " + csvFilename + "\n"
 	try:
 		csvfile = open(csvFilename, 'r')
 		print csvfile + " opened successfully."
@@ -202,12 +205,11 @@ def setup():
 	# Open the cage.txt file where info about the cage is stored
 	global cageFile
 	cageFile = open('cage.txt', 'w')
-	cageFile.write('GROUP CAGE ' + '                                                                                 :\n\n---------\nUNIT TIME=\n')             )
+	cageFile.write('GROUP CAGE                                                                           :\n\n---------\nUNIT TIME=\n')
 	print "Cage File has been created and opened.\n"
 
-	print "Beginning Parsing...\n"
+	wait("Beginning Parsing... ", 5)
 
-	wait(5)
 	system('clear')
 
 # This function checks for cases (typical and atypical) detailed in the README
@@ -237,7 +239,9 @@ def checkCases(mice):
 
 # This function writes data to all the files for CLOCKLAB when called
 # Called at the end of each block in which data was recorded
-def writeData():
+# Takes a list of mouse objects as input
+def writeData(mice):
+	global totalRevolutionsBlock
 	dateAsc = findAscDate(endOfBlock)
 	timeAsc = findAscTime(endOfBlock)
 	for mouse in mice:
@@ -246,37 +250,104 @@ def writeData():
 	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutionsBlock/scale) + '\n')
 	totalRevolutionsBlock = 0.0
 
+# This function counts a turn for all mice that are in the wheel. It also
+# adding a turn to the totalRevolutions and totalRevolutionsBlock counters.
+def countTurn(mice):
+	global totalRevolutions
+	global totalRevolutionsBlock
+	totalRevolutions += 1
+	totalRevolutionsBlock += 1
+	for mouse in mice:
+		mouse.countTurn()
+
+# This function updates flags every time a tag is read from the raw data.
+def updateMiceFlags(tag, gate, mice):
+	for mouse in mice:
+		if mouse.tag == tag:
+			mouse.switchValue(gate)
+	# The script then checks for any typical/atypical cases, and resolves them.
+	checkCases(mice)
+
 # The main function which reads a line and decides what to do with it
 # Gets called in the main loop of the program in main()
-def parseLine():
+def parseLine(endOfBlock, interval):
 	data = csvfile.readline()
 	# If the file is finished, the next line will be blank.
 	if data == '':
-		return 'done' # We're done here.
+		return 'done', 'done' # We're done here.
 	else:
+		# If the data point is the wheel turning
 		if data[1:6] == "wheel":		
 			timeEpoch = float(data[13:26])
 			# If this data is still within the current block:
 			if timeEpoch < endOfBlock:
-				# do stuff
+				countTurn(mice)
 			else:
-				# figure out blank lines
+				# First, write the last line and increase endOfBlock by interval.
+				writeData(mice)
+				endOfBlock += interval
+				# Then, check to see if more than one block has passed.
+				# While there are still empty blocks, write lines.
+				# Then, continue as normal.
+				while (timeEpoch > endOfBlock):
+					# Write a blank line for endOfBlock
+					# This is accomplished by writing a line like normal, since
+					# all of the counters for the current empty block are at zero.
+					writeData(mice)
+					# Then, increase endOfBlock by interval.
+					endOfBlock += interval
+				# Once the new block has been made, record the data point.
+				countTurn(mice)
 		else:
-			timeEpoch = float(data[24:37])
+			try:
+				# If the data point is a gate being triggered
+				timeEpoch = float(data[24:37])
+				if timeEpoch < endOfBlock:
+					tag = data[1:17]
+					gate = data[20]
+					updateMiceFlags(tag, gate, mice)
+				
+				else:
+					# First, write the last line and increase endOfBlock
+					writeData(mice)
+					endOfBlock += interval
+					# Then, check to see if more than one block has passed.
+					# While there are still empty blocks, write lines.
+					# Then, continue as normal.
+					while (timeEpoch > endOfBlock):
+						# Write a blank line for endOfBlock
+						# This is accomplished by writing a line like normal,
+						# since all of the counters for the current empty
+						# block are at zero.
+						writeData(mice)
+						# Then, increase endOfBlock by interval.
+						endOfBlock += interval
+					# Once the new current block has been made, record the data
+					tag = data[1:17]
+					gate = data[20]
+					updateMiceFlags(tag, gate, mice)
+			except:
+				print "ERROR - LINE: " + data + '\n'
+		return 'not done', endOfBlock
 
 def main():
+
+	global endOfBlock
+
 	system('clear')	
 	setup()
 
 	done = False
 	while not done:
-		status = parseLine()
+		status, endOfBlock = parseLine(endOfBlock, interval)
 		if status == 'done':
 			done = True
 
-	# Close/save all the files for CLOCKLAB
+	# Save and close all the files for CLOCKLAB.
 	for mouse in mice:
 		mouse.file.close()
 	cageFile.close()
+
+	print "Parsing is complete."
 
 main()
