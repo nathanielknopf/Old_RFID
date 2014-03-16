@@ -57,10 +57,14 @@ Python 2.7 is required to run all of the code from Project Mus.
 ----------------------------------------
 
 1a. REQUIRED LIBRARIES
-	PySerial [https://pypi.python.org/pypi/pyserial]
-	time [Builtin]
-	os [Builtin]
-	sys [Builtin]
+	
+	* PySerial [https://pypi.python.org/pypi/pyserial]
+
+	* time [Builtin]
+
+	* os [Builtin]
+
+	* sys [Builtin]
 
 -----------------------------------------------------------------------------------
 
