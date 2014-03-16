@@ -1,5 +1,6 @@
-DOCUMENTATION FOR PROJECT MUS
+<h1>DOCUMENTATION FOR PROJECT MUS</h1>
 Nathaniel Knopf, Samuel Sakhai, Shawn Shirazi
+3/16/2014
 
 -----------------------------------------------------------------------------------
 
@@ -23,6 +24,8 @@ TABLE OF CONTENTS:
 		2e. OTHER TERMINOLOGY
 		2f. CONFIG
 	3. BASIC DESCRIPTION OF METHODOLOGY
+		3a. PART I (COLLECTION OF RAW DATA)
+		3b. PART II (PARSING RAW DATA FOR CLOCKLAB)
 	4. DETAILED DESCRIPTION OF METHODOLOGY
 		4a. PART I (COLLECTION OF RAW DATA)
 			4ai. TUBECODE
@@ -32,8 +35,9 @@ TABLE OF CONTENTS:
 				4bi1. MOUSE OBJECTS
 				4bi2. GLOBAL VARIABLES
 			4bii. GENERAL ALGORITHM OF PART II
-				4bii1. READING RAW DATA
-				4bii2. RECORDING PARSED DATA
+				4bii1. SETUP
+				4bii2. READING RAW DATA
+				4bii3. RECORDING PARSED DATA
 			4biii. SPECIAL CASES
 				4biii1. MULTIPLE BLOCKS OF INACTIVITY
 				4biii2. SPECIAL CASES OF MOUSE FLAGS
@@ -200,19 +204,33 @@ The CONFIG file contains prerequisite settings and data which Parsing.py needs t
 
 * Whether the Total Revolutions counters should function in Odometer mode or Summative mode. A value of '1' in the CONFIG sets the counters to Odometer mode. A value of '0' sets them to Summative mode.
 
+The format of the CONFIG file must be exactly as follows:
+
+ENTER INFORMATION AFTER DESCRIPTOR. LEAVE SPACE AFTER DESCRIPTOR BEFORE RELEVANT INPUT.
+TAG ONE  : RFID TAG
+TAG TWO  : RFID TAG
+TAG THREE: RFID TAG
+TAG FOUR : RFID TAG
+CSV FILE : FILE NAME WITH .CSV EXTENSION
+INTERVAL : INTERVAL TIME IN SECONDS
+SCALE    : SCALE VALUE
+ODOMETER : 1 FOR ODOMETER MODE, 0 FOR SUMMATIVE MODE
+
+Replace the text after the colon with your specific information. Make sure to leave a space between the colon and your information. 
+
 -----------------------------------------------------------------------------------
 
 3. BASIC DESCRIPTION OF METHODOLOGY
 
 ----------------------------------------
 
-3a. PART I
+3a. PART I (COLLECTION OF RAW DATA)
 
 In Part I, raw data is collected with TubeCode.py and WheelCode.py in conjunction with the Arduino setup. This raw data includes the triggering of gates by specific mice (differentiated by their RFID tags), rotations of the wheels in each cage, and the times at which such events occurred.
 
 ----------------------------------------
 
-3b. PART II
+3b. PART II (PARSING RAW DATA FOR CLOCKLAB)
 
 In Part II, raw data is parsed into a format that can be input into CLOCKLAB for generation of actograms.
 
@@ -304,13 +322,39 @@ Parsing.py establishes the following global variables when it is run, and uses/u
 
 4bii. GENERAL ALGORITHM OF PART II
 
+PART II consists of the execution of Parsing.py, which parses the raw data created in PART I, and prepares it for use with CLOCKLAB.
+
+The Parsing script is split into three parts:
+
+* Setup
+
+* Reading Raw Data
+
+* Recording Parsed Data
+
+The second and third steps are repeated until all raw data has been parsed.
+
 ----------
 
-4bii1. READING RAW DATA
+4bii1. SETUP
+
+The setup of PART II includes:
+
+* The extraction of configurations from the CONFIG file.
+
+* The creation of mouse objects and other global variables described in section 4bi2. GLOBAL VARIABLES.
+
+Extracting configurations:
+
+Parsing.py will check for configurations stored in 'config.txt' in the local directory. If no such file can be found, Parsing.py will prompt the user for the name of the CONFIG file.
 
 ----------
 
-4bii2. RECORDING PARSED DATA
+4bii2. READING RAW DATA
+
+----------
+
+4bii3. RECORDING PARSED DATA
 
 --------------------
 
@@ -331,3 +375,5 @@ Parsing.py establishes the following global variables when it is run, and uses/u
 --------------------------------------------------------------------------------
 
 6. OTHER NOTES
+
+Please send all questions and/or comments to nathanielknopf@gmail.com. We will get back to you as quickly as possible.
