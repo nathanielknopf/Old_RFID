@@ -1,4 +1,4 @@
-# 03/14/2014 - V_0.2.0b
+# 03/16/2014 - V_0.2.0b
 # This script parses raw data created by TubeCode.py and WheelCode.py for use with CLOCKLAB.
 #
 # IN THIS VERSION:
@@ -9,46 +9,30 @@
 #   methodology/functionality.
 # * No longer prints the count of data points - significantly quickens run time
 #
-# For a highly-detailed description of the methodology implemented by this script, check README.txt
+# For a highly-detailed description of the methodology implemented by this script, check the README
 # 
 # If this code works, it was written by Nathaniel Knopf.
 # If it doesn't, I have no idea who wrote it.
 #
 #
 # TODO:
-# * IMPLEMENT SUMMATIVE MODE FOR TOTAL REVOLUTIONS VARIABLES
-#
-# RESOLVED BUGS:
-# * RESOLVED: REPEATED EMPTY DATA POINTS AND TIMES [03/15/2014 @ 11:24 AM]
-# 	* SOLUTION: Treated "endOfBlock" variable as local in all uses, and it is now passed back
-#		    and forth between setup() (where it is created), main(), parseLine(), and
-#		    writeData(). This resolves any conflicts in value due to treating it as a global
-#		    or as a local variable.
+# * OPTIMIZE / WRITE DOCUMENTATION
 
 # Required Libraries:
 import time
 from os import system
 import sys
 
-# A counter which never gets reset - Counts total revolutions of the wheel.
-# This information is currently never recorded in any file meant for CLOCKLAB,
-# and is only tracked for reference purposes.
-# This variable can function in either of two modes. To see descriptions of the two modes, check README.txt
-# PLEASE ANNOTATE WHICH FUNCTIONALITY THIS COUNTER SERVES:
-# [X] - ODOMETER MODE
-# [ ] - SUMMATIVE MODE
-totalRevolutions = 0.0
-
 # A counter which tracks the total revolutions in the current block.
-# By convention, this is the actual number of turns. When this number is written
-# to the file for CLOCKLAB, however, it is scaled down by whatever the scale
-# factor is, but only in the process of writing. The actual value of the counter
-# never changes, except for when being modified.
-# This variable can function in either of two modes. To see descriptions of the two modes, check README.txt
-# PLEASE ANNOTATE WHICH FUNCTIONALITY THIS COUNTER SERVES:
-# [X] - ODOMETER MODE
-# [ ] - SUMMATIVEM MODE
+# By convention, this is the actual number of turns. However, it's functionality
+# can be changed in the CONFIG file. When this number is written to a CLOCKLAB
+# file, its value is changed as described in the functionality of the Scaling variable
+# in the README. This variable can function in either of two modes. To see descriptions 
+# of the two modes, check the README.
 totalRevolutionsBlock = 0.0
+
+# Similar to totalRevolutionsBlock, but is never set to 0, and is never recorded.
+totalRevolutions = 0.0
 
 months = {'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 
                         'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'}
@@ -117,12 +101,12 @@ class Mouse:
 			self.ranTotal += 1
 
 	# Function which writes a data point to the file for CLOCKLAB
-	def writeLine(self, dateAsc, timeAsc):
-		#self.ranThisBlock /= scale
+	def writeLine(self, dateAsc, timeAsc, scale):
+		self.ranThisBlock = self.ranThisBlock / scale
 		self.file.write(dateAsc + ' ' + timeAsc + '     ' + str(self.ranThisBlock) + '\n')
 
 	# Function called at the end of the block - Clears data for that block period
-	def endOfBlock(self):
+	def finishBlock(self):
 		self.ranThisBlock = 0.0
 
 # Given the file in which configs are stored, pulls all needed data from config file.
@@ -189,20 +173,15 @@ def setup():
 	except:
 		print "ERROR - FATAL ERROR: CSVFILE" # Error in finding raw data
 
-	# Variable which tracks the start of the current block
-	# When csvfile is loaded, startime is stored in the first line of the file
-	global startTime
-	startTime = float(csvfile.readline()[12:25])
-	print "Start Time: " + str(startTime) + "\n"
-
 	# Interval - Length of block in seconds.
 	global interval
 	interval = float(configs[5])
 	print "Interval: " + str(interval) + "\n"
 
 	# endOfBlock - Time at which the block ends and data is recorded
-	# This gets returned to main()
-	endOfBlock = startTime + interval
+	# Value is determined by adding interval to the START TIME logged in the CSV file.
+	global endOfBlock	
+	endOfBlock = float(csvfile.readline()[12:25]) + interval
 	print "End of Block: " + str(endOfBlock) + "\n"
 
 	# Scale factor - necessary for CLOCKLAB as all values >=1000 are ignored.
@@ -210,6 +189,14 @@ def setup():
 	global scale
 	scale = float(configs[6])
 	print "Scale: " + str(scale) + "\n"
+
+	# Odometer vs. Summative mode for counting rotations in the cage
+	# Is set to either 0 or 1 in the configs
+	# If 1, odometerMode = True (counter in odometer mode)
+	# If 0, odometerMode = False (counter in summative mode)
+	global odometerMode
+	odometerMode = bool(int(configs[7]))
+	
 
 	# Open the cage.txt file where info about the cage is stored
 	global cageFile
@@ -220,8 +207,6 @@ def setup():
 	wait("Beginning Parsing... ", 5)
 
 	system('clear')
-
-	return endOfBlock
 
 # This function checks for cases (typical and atypical) detailed in the README
 # Function takes a list of mouse objects as input - Accommodates any length list 
@@ -251,30 +236,46 @@ def checkCases(mice):
 # This function writes data to all the files for CLOCKLAB when called
 # Called at the end of each block in which data was recorded
 # Takes a list of mouse objects as input
-def writeData(mice, endOfBlock):
+def writeData(mice):
 	global totalRevolutionsBlock
+	global scale
+	global endOfBlock
+	totalRevolutionsBlock = totalRevolutionsBlock / scale
 	dateAsc = findAscDate(endOfBlock)
 	timeAsc = findAscTime(endOfBlock)
 	for mouse in mice:
-		mouse.writeLine(dateAsc, timeAsc)
-		mouse.endOfBlock()
-	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutionsBlock) + '\n') #/scale
+		mouse.writeLine(dateAsc, timeAsc, scale)
+		mouse.finishBlock()
+	cageFile.write(dateAsc + ' ' + timeAsc + '     ' + str(totalRevolutionsBlock) + '\n')
 	totalRevolutionsBlock = 0.0
 
 # This function counts a turn for all mice that are in the wheel. It also
-# adding a turn to the totalRevolutions and totalRevolutionsBlock counters.
+# adds a turn to the totalRevolutions and totalRevolutionsBlock counters.
+# The first step in this functions is to check if any mice are in the wheel.
+# For each mouse in the wheel, countTurn() adds to the mouses's counters.
+# The second step is to update the totalRevolutions and totalRevolutionsBlock
+# variables. The program checks to see if 
 def countTurn(mice):
 	global totalRevolutions
 	global totalRevolutionsBlock
-	toAdd = False
+	global odometerMode
+	doesAdd = False
 	for mouse in mice:
 		if mouse.inWheel:
-			toAdd = True
-	if toAdd:
-		totalRevolutions += 1
-		totalRevolutionsBlock += 1
-	for mouse in mice:
-		mouse.countTurn()
+			doesAdd = True
+			mouse.countTurn()
+	if doesAdd:
+		if odometerMode:
+			totalRevolutions += 1
+			totalRevolutionsBlock += 1
+		else:
+			numMice = 0
+			for mouse in mice:
+				if mouse.inWheel:
+					numMice += 1
+			for i in range(numMice):
+				totalRevolutions += 1
+				totalRevolutionsBlock += 1
 
 # This function updates flags every time a tag is read from the raw data.
 def updateMiceFlags(tag, gate, mice):
@@ -284,13 +285,17 @@ def updateMiceFlags(tag, gate, mice):
 	# The script then checks for any typical/atypical cases, and resolves them.
 	checkCases(mice)
 
-# The main function which reads a line and decides what to do with it
-# Gets called in the main loop of the program in main()
-def parseLine(endOfBlock, interval):
+# The main function which reads a line and parses it.
+# It returns two values - the status of the program (if it is done parsing), and
+# the endOfBlock variable.
+def parseLine():
+	global interval
+	global endOfBlock
+	# Read the next data point from the CSV File
 	data = csvfile.readline()
 	# If the file is finished, the next line will be blank.
 	if data == '':
-		return 'done', 'done' # We're done here.
+		return 'done' # We're done here.
 	else:
 		# If the data point is the wheel turning
 		if data[1:6] == "wheel":		
@@ -298,9 +303,10 @@ def parseLine(endOfBlock, interval):
 			# If this data is still within the current block:
 			if timeEpoch < endOfBlock:
 				countTurn(mice)
+			# If it is not:
 			else:
 				# First, write the last line and increase endOfBlock by interval.
-				writeData(mice, endOfBlock)
+				writeData(mice)
 				endOfBlock += interval
 				# Then, check to see if more than one block has passed.
 				# While there are still empty blocks, write lines.
@@ -309,23 +315,24 @@ def parseLine(endOfBlock, interval):
 					# Write a blank line for endOfBlock
 					# This is accomplished by writing a line like normal, since
 					# all of the counters for the current empty block are at zero.
-					writeData(mice, endOfBlock)
+					writeData(mice)
 					# Then, increase endOfBlock by interval.
 					endOfBlock += interval
 				# Once the new block has been made, record the data point.
 				countTurn(mice)
+		# If the data point is a gate being triggered		
 		else:
 			try:
-				# If the data point is a gate being triggered
 				timeEpoch = float(data[24:37])
+				# If this data is still within the current block:
 				if timeEpoch < endOfBlock:
 					tag = data[1:17]
 					gate = data[20]
 					updateMiceFlags(tag, gate, mice)
-				
+				# If it is not
 				else:
 					# First, write the last line and increase endOfBlock
-					writeData(mice, endOfBlock)
+					writeData(mice)
 					endOfBlock += interval
 					# Then, check to see if more than one block has passed.
 					# While there are still empty blocks, write lines.
@@ -335,7 +342,7 @@ def parseLine(endOfBlock, interval):
 						# This is accomplished by writing a line like normal,
 						# since all of the counters for the current empty
 						# block are at zero.
-						writeData(mice, endOfBlock)
+						writeData(mice)
 						# Then, increase endOfBlock by interval.
 						endOfBlock += interval
 					# Once the new current block has been made, record the data
@@ -344,16 +351,16 @@ def parseLine(endOfBlock, interval):
 					updateMiceFlags(tag, gate, mice)
 			except:
 				print "ERROR - LINE: " + data + '\n'
-		return 'not done', endOfBlock
+		return 'not done'
 
 def main():
 
 	system('clear')	
-	endOfBlock = setup()
+	setup()
 
 	done = False
 	while not done:
-		status, endOfBlock = parseLine(endOfBlock, interval)
+		status = parseLine()
 		if status == 'done':
 			done = True
 

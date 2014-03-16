@@ -165,7 +165,9 @@ This is the variable which expresses the duration of each block of time. It can 
 
 2dii. END OF BLOCK VARIABLE
 
-This is a variable used by the Parsing.py script to determine whether each raw data point that it reads falls within the current block of time. When Parsing.py reads a raw data point from the CSV file which occurred at a time before the time stored in the End of Block variable, it extracts the relevant information from the raw data and updates whatever the raw data dictates. If the raw data point occurred at a time after the time stored in the End of Block variable, Parsing.py will interpret this as meaning that the block it was working in has come to its conclusion. It will then record the parsed data to the files for CLOCKLAB. If several blocks of time have passed with no activity, Parsing.py will account for this in the CLOCKLAB files as well. To see a detailed description of how Parsing.py does this, check section 4biii1. MULTIPLE BLOCKS OF INACTIVITY.
+This is a variable used by the Parsing.py script to determine whether each raw data point that it reads falls within the current block of time. 
+
+When Parsing.py reads a raw data point from the CSV file which occurred at a time before the time stored in the End of Block variable, it extracts the relevant information from the raw data and updates whatever the raw data dictates. If the raw data point occurred at a time after the time stored in the End of Block variable, Parsing.py will interpret this as meaning that the block it was working in has come to its conclusion. It will then record the parsed data to the files for CLOCKLAB. If several blocks of time have passed with no activity, Parsing.py will account for this in the CLOCKLAB files as well. To see a detailed description of how Parsing.py does this, check section 4biii1. MULTIPLE BLOCKS OF INACTIVITY.
 
 ----------------------------------------
 
