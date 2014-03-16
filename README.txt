@@ -30,6 +30,7 @@ TABLE OF CONTENTS:
 		4b. PART II (PARSING RAW DATA FOR CLOCKLAB)
 			4bi. BACKGROUND
 				4bi1. MOUSE OBJECTS
+				4bi2. GLOBAL VARIABLES
 			4bii. GENERAL ALGORITHM OF PART II
 				4bii1. READING RAW DATA
 				4bii2. RECORDING PARSED DATA
@@ -117,6 +118,8 @@ There are two modes for each Total Revolutions variable. These two modes are:
 
 * SUMMATIVE MODE: This mode is for tracking the sum of all the rotations each animal caused. For example, if the wheel turned 10 times while two mice were inside of it, the value stored in the Total Revolutions Varibale would be 10 + 10 = 20 rotations.
 
+By default, the Total Revolutions counters function in Odometer mode. This can be changed in the CONFIG file. For details on how to change this, check section 2f. CONFIG.
+
 --------------------
 
 2bii. TOTAL REVOLUTIONS VARIABLE
@@ -193,19 +196,35 @@ The CONFIG file contains prerequisite settings and data which Parsing.py needs t
 
 * The desired interval (length of each block) for the data to be recorded in.
 
-* The desired scaling variable for the data to be recorded with.
+* The desired scaling variable for the data to be recorded with, as described in section 2c. SCALING.
+
+* Whether the Total Revolutions counters should function in Odometer mode or Summative mode. A value of '1' in the CONFIG sets the counters to Odometer mode. A value of '0' sets them to Summative mode.
 
 -----------------------------------------------------------------------------------
 
 3. BASIC DESCRIPTION OF METHODOLOGY
 
+----------------------------------------
+
+3a. PART I
+
 In Part I, raw data is collected with TubeCode.py and WheelCode.py in conjunction with the Arduino setup. This raw data includes the triggering of gates by specific mice (differentiated by their RFID tags), rotations of the wheels in each cage, and the times at which such events occurred.
+
+----------------------------------------
+
+3b. PART II
 
 In Part II, raw data is parsed into a format that can be input into CLOCKLAB for generation of actograms.
 
 -----------------------------------------------------------------------------------
 
 4. DETAILED DESCRIPTION OF METHODOLOGY
+
+In this section, the workings of Project Mus are described in detail.
+
+Section 4a. PART I details the process by which Project Mus collects raw data.
+
+Section 4b. PART II details the process by which Project Mus processes the raw data collected in PART I in preparation for use with CLOCKLAB.
 
 ----------------------------------------
 
@@ -241,7 +260,7 @@ Includes:
 
 * Mouse Objects
 
-*
+* Global Variables
 
 ----------
 
@@ -257,7 +276,29 @@ Each mouse in the cage is treated as an object, referred to from this point forw
 
 * The file to which all output data for use with CLOCKLAB is written (file). This file is opened when Parsing.py begins, and is saved and closed when Parsing.py finishes.
 
-Parsing.py maintains a list of these mouse objects called "mice", which it uses to iterate through all mouse objects to apply functions.
+Parsing.py maintains a list of these mouse objects called "mice", which it uses to iterate through all mouse objects when running functions.
+
+----------
+
+4bi2. GLOBAL VARIABLES
+
+Parsing.py establishes the following global variables when it is run, and uses/updates them throughout the code.
+
+* "mouseOne", "mouseTwo", "mouseThree", "mouseFour" - Mouse objects.
+
+* "mice" - A list of mouse objects, used for iterating through all mouse objects.
+
+* "csvfile" - The CSV file containing raw data.
+
+* "interval" - The length of each block of time.
+
+* "endOfBlock" - The time at which the current block ends.
+
+* "scale" - The factor by which each value written to the CLOCKLAB files is scaled.
+
+* "odometerMode" - Whether or not Total Revolutions counters function in Odometer mode. This is a boolean (True or False)
+
+* "cageFile" - Similar to the files opened by each mouse object, except it tracks the activity for the entire cage using the Total Revolutions counters.
 
 --------------------
 
