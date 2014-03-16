@@ -21,8 +21,9 @@ TABLE OF CONTENTS:
 		2d. INTERVAL AND END OF BLOCK
 			2di. INTERVAL VARIABLE
 			2dii. END OF BLOCK VARIABLE
-		2e. OTHER TERMINOLOGY
-		2f. CONFIG
+		2e. COUNTING WHEEL REVOLUTIONS
+		2f. OTHER TERMINOLOGY
+		2g. CONFIG
 	3. BASIC DESCRIPTION OF METHODOLOGY
 		3a. PART I (COLLECTION OF RAW DATA)
 		3b. PART II (PARSING RAW DATA FOR CLOCKLAB)
@@ -34,9 +35,13 @@ TABLE OF CONTENTS:
 			4bi. BACKGROUND
 				4bi1. MOUSE OBJECTS
 				4bi2. GLOBAL VARIABLES
-			4bii. GENERAL ALGORITHM OF PART II
+			4bii. ALGORITHM OF PART II
 				4bii1. SETUP
+					4bii1a. CONFIG SETUP
+					4bii1b. CREATING VARIABLES
 				4bii2. READING RAW DATA
+					4bii2a. GATE TRIGGERED
+					4bii2b. WHEEL TURNED
 				4bii3. RECORDING PARSED DATA
 			4biii. SPECIAL CASES
 				4biii1. MULTIPLE BLOCKS OF INACTIVITY
@@ -128,7 +133,7 @@ There are two modes for each Total Revolutions variable. These two modes are:
 
 * SUMMATIVE MODE: This mode is for tracking the sum of all the rotations each animal caused. For example, if the wheel turned 10 times while two mice were inside of it, the value stored in the Total Revolutions Varibale would be 10 + 10 = 20 rotations.
 
-By default, the Total Revolutions counters function in Odometer mode. This can be changed in the CONFIG file. For details on how to change this, check section 2f. CONFIG.
+By default, the Total Revolutions counters function in Odometer mode. This can be changed in the CONFIG file. For details on how to change this, check section 2g. CONFIG.
 
 --------------------
 
@@ -184,7 +189,17 @@ When Parsing.py reads a raw data point from the CSV file which occurred at a tim
 
 ----------------------------------------
 
-2e. OTHER TERMINOLOGY
+2e. COUNTING WHEEL REVOLUTIONS
+
+When the Parsing.py script counts a wheel revolution, it adds to the counter of each mouse that is inside the wheel.
+
+However, there may be some cases where the raw data collection in PART I might not be completely accurate, and it may report that there are no mice inside the wheel when that is not the case. This is a rare occurrence, and the chances of this happening can be minimized through optimization of the RFID antennae as described in section 2ai. GATES.
+
+It is convention that Parsing.py will not record wheel revolutions in the Total Revolutions counters if it cannot attribute the revolution to at least one mouse. That means that in the case described above, any wheel revolutions that occurr will be discarded.
+
+----------------------------------------
+
+2f. OTHER TERMINOLOGY
 
 Various other terminology used in Project Mus:
 
@@ -196,7 +211,7 @@ Various other terminology used in Project Mus:
 
 ----------------------------------------
 
-2f. CONFIG
+2g. CONFIG
 
 The CONFIG file contains prerequisite settings and data which Parsing.py needs to parse the data for CLOCKLAB. This includes:
 
@@ -228,17 +243,19 @@ Replace the text after the colon with your specific information. Make sure to le
 
 3. BASIC DESCRIPTION OF METHODOLOGY
 
+This section gives a rough outline of the two steps of Project Mus.
+
 ----------------------------------------
 
 3a. PART I (COLLECTION OF RAW DATA)
 
-In Part I, raw data is collected with TubeCode.py and WheelCode.py in conjunction with the Arduino setup. This raw data includes the triggering of gates by specific mice (differentiated by their RFID tags), rotations of the wheels in each cage, and the times at which such events occurred.
+In PART I, raw data is collected with TubeCode.py and WheelCode.py in conjunction with the Arduino setup. This raw data includes the triggering of gates by specific mice (differentiated by their RFID tags), rotations of the wheels in each cage, and the times at which such events occurred.
 
 ----------------------------------------
 
 3b. PART II (PARSING RAW DATA FOR CLOCKLAB)
 
-In Part II, raw data is parsed into a format that can be input into CLOCKLAB for generation of actograms.
+Using the raw data from PART I, Parsing.py determines which wheel rotations should be attributed to which mice, and records that information to files for use with CLOCKLAB to generate actograms.
 
 -----------------------------------------------------------------------------------
 
@@ -326,7 +343,7 @@ Parsing.py establishes the following global variables when it is run, and uses/u
 
 --------------------
 
-4bii. GENERAL ALGORITHM OF PART II
+4bii. ALGORITHM OF PART II
 
 PART II consists of the execution of Parsing.py, which parses the raw data created in PART I, and prepares it for use with CLOCKLAB.
 
@@ -338,7 +355,7 @@ The Parsing script is split into three parts:
 
 * Recording Parsed Data
 
-The second and third steps are repeated until all raw data has been parsed.
+The second and third steps are repeated until all raw data has been parsed, at which point the CLOCKLAB files are saved and ready to be used.
 
 ----------
 
@@ -350,13 +367,69 @@ The setup of PART II includes:
 
 * The creation of mouse objects and other global variables described in section 4bi2. GLOBAL VARIABLES.
 
-Extracting configurations:
+----------
 
-Parsing.py will check for configurations stored in 'config.txt' in the local directory. If no such file can be found, Parsing.py will prompt the user for the name of the CONFIG file.
+4bii1a. CONFIG SETUP
+
+Parsing.py will check for configurations stored in 'config.txt' in the local directory. If no such file can be found, Parsing.py will prompt the user for the name of the CONFIG file. Parsing.py will then use this information to setup for the execution of the rest of the script. Parsing.py will output a brief overview of the information extracted from the CONFIG file.
+
+----------
+
+4bii1b. CREATING VARIABLES
+
+Creating Mouse Objects and Other Global Variables:
+
+Using the information extracted from the CONFIG file, Parsing.py will continue setting up by creating all variables and objects needed for the remainder of the script. A listing of all such variables and objects can be found in Section 4bi. BACKGROUND.
 
 ----------
 
 4bii2. READING RAW DATA
+
+Once the setup of PART II is complete, Parsing.py will begin to read raw data from the csvfile and parse it into data written to the CLOCKLAB files.
+
+There are two types of raw data points:
+
+* Gate triggered
+
+* Wheel revolution
+
+Parsing.py will read each raw data point, determine which type it is, and then decide what to do with it.
+
+----------
+
+4bii2a. GATE TRIGGERED
+
+Raw data expressing a gate being triggered has the following general format:
+
+"RFID_Tag","Gate_Triggered","Time_Since_Epoch","ASCII_Date_And_Time"
+
+For example, if a mouse triggers a gate, the resulting raw data point might appear as follows:
+
+"900_226000507571","1","1394482563.24","Mon Mar 10 13:16:03 2014"
+
+Parsing.py, upon realizing that this raw data point represents a gate being triggered, will extract the following information from it:
+
+* RFID Tag
+
+* Gate Triggered
+
+* Time Since Epoch
+
+It will then check to see if this raw data point is part of the current block by comparing it to the endOfBlock variable, as described in Section 2dii. END OF BLOCK VARIABLE.
+
+If it falls within the current block, Parsing.py then updates the flags of the mouse object which corresponds to the RFID Tag extracted. It then calls a function to check for special cases of the mouse flags, which are detailed in Section 4biii2. SPECIAL CASES OF MOUSE FLAGS. These special cases are to help Parsing.py determine whether or not the mouse is inside the wheel, so that it can determine when to attribute wheel revolutions to specific mice.
+
+----------
+
+4bii2b. WHEEL TURNED
+
+Raw data expressing a wheel revolution has the following general format:
+
+"wheel","-","TimeSinceEpoch","ASCIIDateTime"
+
+In order to keep the format of the data points for gates being triggered and wheels revolving, the wheel data point includes a "-" where the gate triggered would normally be noted.
+
+When Parsing.py determines that a raw data point represents a wheel revolution, it adds one to the counters of any mouse that are currently flagged as in the wheel. In occordance with the convention described in Section 2e. COUNTING WHEEL REVOLUTIONS, the Total Revolutions counters, which count revolutions for the entire cage, will not be updated to reflect any revolutions that cannot be attributed to at least one mouse. For more information, check Section 2e. COUNTING WHEEL REVOLUTIONS.
 
 ----------
 
