@@ -1,4 +1,4 @@
-<h1>DOCUMENTATION FOR PROJECT MUS</h1>
+DOCUMENTATION FOR PROJECT MUS
 Nathaniel Knopf, Samuel Sakhai, Shawn Shirazi
 3/16/2014
 
@@ -57,10 +57,16 @@ Python 2.7 is required to run all of the code from Project Mus.
 ----------------------------------------
 
 1a. REQUIRED LIBRARIES
-	PySerial [https://pypi.python.org/pypi/pyserial]
-	time [Builtin]
-	os [Builtin]
-	sys [Builtin]
+	
+The following Python 2.7 libraries are required to run code from Project Mus
+
+* PySerial [https://pypi.python.org/pypi/pyserial]
+
+* time [Builtin]
+
+* os [Builtin]
+
+* sys [Builtin]
 
 -----------------------------------------------------------------------------------
 
