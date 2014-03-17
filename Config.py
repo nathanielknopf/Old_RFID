@@ -1,5 +1,5 @@
 # Nathaniel Knopf
-# 3/16/2014
+# 3/17/2014
 #
 # This script loads a GUI for entering info into the CONFIG file.
 # The CONFIG file is then saved in the local directory as config.txt
@@ -17,7 +17,7 @@ def writeToFile(tag1, tag2, tag3, tag4, csv, scale, interval, odometer):
 		odometer = '1'
 	elif odometer == 'n':
 		odometer = '0'
-	configFile = open('testConfig.txt', 'w')
+	configFile = open('config.txt', 'w')
 	configFile.write('ENTER INFORMATION AFTER DESCRIPTOR. LEAVE SPACE AFTER DESCRIPTOR BEFORE RELEVANT INPUT.\n')
 	configFile.write('TAG ONE  : ' + tag1 + '\n')
 	configFile.write('TAG TWO  : ' + tag2 + '\n')

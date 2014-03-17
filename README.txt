@@ -22,8 +22,9 @@ TABLE OF CONTENTS:
 			2di. INTERVAL VARIABLE
 			2dii. END OF BLOCK VARIABLE
 		2e. COUNTING WHEEL REVOLUTIONS
-		2f. OTHER TERMINOLOGY
-		2g. CONFIG
+		2f. CLOCKLAB FILES
+		2g. OTHER TERMINOLOGY
+		2h. CONFIG
 	3. BASIC DESCRIPTION OF METHODOLOGY
 		3a. PART I (COLLECTION OF RAW DATA)
 		3b. PART II (PARSING RAW DATA FOR CLOCKLAB)
@@ -66,6 +67,8 @@ Python 2.7 is required to run all of the code from Project Mus.
 The following Python 2.7 libraries are required to run code from Project Mus
 
 * PySerial [https://pypi.python.org/pypi/pyserial]
+
+* Tkinter [Builtin]
 
 * time [Builtin]
 
@@ -133,7 +136,7 @@ There are two modes for each Total Revolutions variable. These two modes are:
 
 * SUMMATIVE MODE: This mode is for tracking the sum of all the rotations each animal caused. For example, if the wheel turned 10 times while two mice were inside of it, the value stored in the Total Revolutions Variable would be 10 + 10 = 20 rotations.
 
-By default, the Total Revolutions counters function in Odometer mode. This can be changed in the CONFIG file. For details on how to change this, check section 2g. CONFIG.
+By default, the Total Revolutions counters function in Odometer mode. This can be changed in the CONFIG file. For details on how to change this, check section 2h. CONFIG.
 
 --------------------
 
@@ -199,7 +202,23 @@ It is convention that Parsing.py will not record wheel revolutions in the Total 
 
 ----------------------------------------
 
-2f. OTHER TERMINOLOGY
+2f. CLOCKLAB FILES
+
+CLOCKLAB files are .txt files that are specifically formatted for use with CLOCKLAB. Each mouse object has its own file, which is saved as "<mouseTag>.txt". There is also one CLOCKLAB file created for the entire cage, called "cage.txt". The data saved in each mouse file is specific to that mouse, and the data saved in the CLOCKLAB file for the entire cage is the information stored in the Total Revolutions counters.
+
+Each CLOCKLAB file opens with a header that describes the file, and is followed by parsed data points. These data points are formatted as follows:
+
+yy/mm/dd hr:mn:ss.ms     revolutions
+
+For example:
+
+14/03/10 13:59:15.00     116.0
+
+The time and date in each raw data point refers to the block which ends at that time. So in the example above, if the block length (interval) fed to Parsing.py were 600 seconds, then the 116 revolutions would refer to those that occurred between 13:49:15.00 and 13:59:15.00 on 14/03/10.
+
+----------------------------------------
+
+2g. OTHER TERMINOLOGY
 
 Various other terminology used in Project Mus:
 
@@ -211,7 +230,7 @@ Various other terminology used in Project Mus:
 
 ----------------------------------------
 
-2g. CONFIG
+2h. CONFIG
 
 The CONFIG file contains prerequisite settings and data which Parsing.py needs to parse the data for CLOCKLAB. This includes:
 
@@ -238,6 +257,8 @@ SCALE    : SCALE VALUE
 ODOMETER : 1 FOR ODOMETER MODE, 0 FOR SUMMATIVE MODE
 
 Replace the text after the colon with your specific information. Make sure to leave a space between the colon and your information. 
+
+Alternatively, the CONFIG file can be created/modified with the Config.py script. This script opens a GUI with Tkinter, and then prompts the user for all information required.
 
 -----------------------------------------------------------------------------------
 
@@ -371,7 +392,7 @@ The setup of PART II includes:
 
 4bii1a. CONFIG SETUP
 
-Parsing.py will check for configurations stored in 'config.txt' in the local directory. If no such file can be found, Parsing.py will prompt the user for the name of the CONFIG file. Parsing.py will then use this information to setup for the execution of the rest of the script. Parsing.py will output a brief overview of the information extracted from the CONFIG file. Instructions for setting up and/or modifying the CONFIG File can be found in section 2g. CONFIG.
+Parsing.py will check for configurations stored in 'config.txt' in the local directory. If no such file can be found, Parsing.py will prompt the user for the name of the CONFIG file. Parsing.py will then use this information to setup for the execution of the rest of the script. Parsing.py will output a brief overview of the information extracted from the CONFIG file. Instructions for setting up and/or modifying the CONFIG File can be found in section 2h. CONFIG.
 
 ----------
 
@@ -435,9 +456,19 @@ When Parsing.py determines that a raw data point represents a wheel revolution, 
 
 4bii3. RECORDING PARSED DATA
 
+When a data point is read that occurrs after the current block, Parsing.py will write a line of data to the CLOCKLAB files, and begin the next block. To determine when a given block ends, Parsing.py uses the End of Block variable (endOfBlock) as described in Section 2dii. END OF BLOCK VARIABLE.
+
+CLOCKLAB files are .txt files that are specifically formatted for use with CLOCKLAB. For a description of this formatting, see Section 2f. CLOCKLAB FILES.
+
+NOTE: Parsing.py only saves the data written to the CLOCKLAB files once the script has finished running - If any fatal errors occur and the script aborts, no CLOCKLAB files will be saved.
+
 --------------------
 
 4biii. SPECIAL CASES
+
+To determine whether or not to flag a mouse as in the wheel, Parsing.py utilizes a function which checks the flags for the two gates of a mouse object, and determines whether or not the flags signify that the mouse has entered or left the wheel. 
+
+In PART I, there may be some cases where RFID gates are not triggered if an animal passes through them too quickly, or if the gates are not tuned properly.. Additionally, if an animal lingers inside of a gate for too long, they may trigger multiple reads, thus switching the flag for that gate more times than desired. To accomodate for this, Parsing.py accounts for and resolves two additional cases.
 
 ----------
 

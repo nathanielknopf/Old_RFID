@@ -14,9 +14,8 @@
 # If this code works, it was written by Nathaniel Knopf.
 # If it doesn't, I have no idea who wrote it.
 #
-#
 # TODO:
-# * OPTIMIZE / WRITE DOCUMENTATION
+# * OPTIMIZE CODE AND WRITE DOCUMENTATION
 
 # Required Libraries:
 import time
