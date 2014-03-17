@@ -1,8 +1,8 @@
 DOCUMENTATION FOR PROJECT MUS
 Nathaniel Knopf, Samuel Sakhai, Shawn Shirazi
-3/16/2014
+Last Updated - 3/16/2014
 
------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 TABLE OF CONTENTS:
 
@@ -49,7 +49,7 @@ TABLE OF CONTENTS:
 	5. BEFORE RUNNING
 	6. OTHER NOTES
 
------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 1. ABOUT
 
@@ -131,7 +131,7 @@ There are two modes for each Total Revolutions variable. These two modes are:
 
 * ODOMETER MODE: This mode is for tracking the physical number of times the wheel rotates. For example, if the wheel turned 10 times while two mice were inside of it, the value stored in the Total Revolutions Variable would be 10 rotations.
 
-* SUMMATIVE MODE: This mode is for tracking the sum of all the rotations each animal caused. For example, if the wheel turned 10 times while two mice were inside of it, the value stored in the Total Revolutions Varibale would be 10 + 10 = 20 rotations.
+* SUMMATIVE MODE: This mode is for tracking the sum of all the rotations each animal caused. For example, if the wheel turned 10 times while two mice were inside of it, the value stored in the Total Revolutions Variable would be 10 + 10 = 20 rotations.
 
 By default, the Total Revolutions counters function in Odometer mode. This can be changed in the CONFIG file. For details on how to change this, check section 2g. CONFIG.
 
@@ -371,7 +371,7 @@ The setup of PART II includes:
 
 4bii1a. CONFIG SETUP
 
-Parsing.py will check for configurations stored in 'config.txt' in the local directory. If no such file can be found, Parsing.py will prompt the user for the name of the CONFIG file. Parsing.py will then use this information to setup for the execution of the rest of the script. Parsing.py will output a brief overview of the information extracted from the CONFIG file.
+Parsing.py will check for configurations stored in 'config.txt' in the local directory. If no such file can be found, Parsing.py will prompt the user for the name of the CONFIG file. Parsing.py will then use this information to setup for the execution of the rest of the script. Parsing.py will output a brief overview of the information extracted from the CONFIG file. Instructions for setting up and/or modifying the CONFIG File can be found in section 2g. CONFIG.
 
 ----------
 
@@ -429,7 +429,7 @@ Raw data expressing a wheel revolution has the following general format:
 
 In order to keep the format of the data points for gates being triggered and wheels revolving, the wheel data point includes a "-" where the gate triggered would normally be noted.
 
-When Parsing.py determines that a raw data point represents a wheel revolution, it adds one to the counters of any mouse that are currently flagged as in the wheel. In occordance with the convention described in Section 2e. COUNTING WHEEL REVOLUTIONS, the Total Revolutions counters, which count revolutions for the entire cage, will not be updated to reflect any revolutions that cannot be attributed to at least one mouse. For more information, check Section 2e. COUNTING WHEEL REVOLUTIONS.
+When Parsing.py determines that a raw data point represents a wheel revolution, it adds one to the counters of any mouse that are currently flagged as in the wheel. In accordance with the convention described in Section 2e. COUNTING WHEEL REVOLUTIONS, the Total Revolutions counters, which count revolutions for the entire cage, will not be updated to reflect any revolutions that cannot be attributed to at least one mouse. For more information, check Section 2e. COUNTING WHEEL REVOLUTIONS.
 
 ----------
 
@@ -454,5 +454,7 @@ When Parsing.py determines that a raw data point represents a wheel revolution, 
 --------------------------------------------------------------------------------
 
 6. OTHER NOTES
+
+Documentation written by Nathaniel Knopf
 
 Please send all questions and/or comments to nathanielknopf@gmail.com. We will get back to you as quickly as possible.
