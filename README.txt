@@ -6,6 +6,7 @@ Last Updated - 3/16/2014
 
 TABLE OF CONTENTS:
 
+	0. TODO
 	1. ABOUT
 		1a. REQUIRED LIBRARIES
 	2. CONVENTIONS
@@ -49,6 +50,20 @@ TABLE OF CONTENTS:
 				4biii2. SPECIAL CASES OF MOUSE FLAGS
 	5. BEFORE RUNNING
 	6. OTHER NOTES
+
+--------------------------------------------------------------------------------
+
+0. TODO
+
+* Pots provide too much resistance.
+
+* Coils are wound incorrectly.
+
+* Connections/Jacks provide too much resistance
+
+* HDX Tags take too long to read - Pray for FDX tags to fix everything
+
+* Poor soldering coul have created too much resistance
 
 --------------------------------------------------------------------------------
 
